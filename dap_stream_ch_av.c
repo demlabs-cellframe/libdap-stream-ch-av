@@ -190,14 +190,14 @@ void ch_mcod_check_and_step(ch_mcod_t * mcod)
     if(media_is_active(mcod->mm)){
         if(!media_out_step(mcod->mm)){
             media_inactivate(mcod->mm);
-    	    stream_ch_pkt_write_f(mcod->ch, 'i',"mcod_media_active=false");
+    	    dap_stream_ch_pkt_write_f(mcod->ch, 'i',"mcod_media_active=false");
 	}
     }else if( media_last_position(mcod->mm)<(mcod->client_position+mcod->client_buf_time) ){
-        stream_ch_pkt_write_f(mcod->ch, 'i',"mcod_media_active=true");
+        dap_stream_ch_pkt_write_f(mcod->ch, 'i',"mcod_media_active=true");
         media_activate(mcod->mm);
         if(!media_out_step(mcod->mm)){
             media_inactivate(mcod->mm);
-            stream_ch_pkt_write_f(mcod->ch, 'i',"mcod_media_active=false");
+            dap_stream_ch_pkt_write_f(mcod->ch, 'i',"mcod_media_active=false");
 	}
     }
 }
@@ -222,7 +222,7 @@ void ch_mcod_packet_out(stream_ch_t * ch, void * arg)
     switch(mcod->state){
         case CH_MCOD_STATE_START:{
             log_it(INFO,"START state");
-            stream_ch_pkt_write_f(ch, 'i',"gst_state=start");
+            dap_stream_ch_pkt_write_f(ch, 'i',"gst_state=start");
             ch_mcod_set_state(mcod,CH_MCOD_STATE_PLAYING);
 
         }break;
@@ -231,7 +231,7 @@ void ch_mcod_packet_out(stream_ch_t * ch, void * arg)
                 int64_t duration=media_duration(mm);
                 if(duration>0){
                     log_it (DEBUG,"duration = %llf seconds", ((long double) duration)/ 1000000000.0);
-                    stream_ch_pkt_write_f(ch,'i',"duration=%lld",duration);
+                    dap_stream_ch_pkt_write_f(ch,'i',"duration=%lld",duration);
                     mcod->is_duration_sent=true;
                 }
             }
@@ -245,12 +245,12 @@ void ch_mcod_packet_out(stream_ch_t * ch, void * arg)
         }break;
         case CH_MCOD_STATE_PAUSED:{
             log_it(NOTICE,"PAUSED state: nothing to stream");
-            stream_ch_pkt_write_f(ch, 'i',"mcod_state=paused");
+            dap_stream_ch_pkt_write_f(ch, 'i',"mcod_state=paused");
             stream_ch_set_ready_to_write(ch,false);
         }break;
         case CH_MCOD_STATE_END:{
             log_it(NOTICE,"GStreamer pipeline streaming ends");
-            stream_ch_pkt_write_f(ch,'i',"mcod_state=end");
+            dap_stream_ch_pkt_write_f(ch,'i',"mcod_state=end");
             media_close(mm);
         }break;
         default:{
@@ -273,12 +273,12 @@ void ch_mcod_set_state(ch_mcod_t * mcod, ch_mcod_state_t st)
         mcod->state=st;
         switch(st){
             case CH_MCOD_STATE_START:{
-                stream_ch_pkt_write_f(mcod->ch, 'i',"mcod_state=start");
+                dap_stream_ch_pkt_write_f(mcod->ch, 'i',"mcod_state=start");
                 stream_ch_set_ready_to_write(mcod->ch,true);
             }break;
             case CH_MCOD_STATE_PLAYING:{
                 log_it(NOTICE,"PLAYING state");
-                stream_ch_pkt_write_f(mcod->ch, 'i',"mcod_state=playing");
+                dap_stream_ch_pkt_write_f(mcod->ch, 'i',"mcod_state=playing");
                 //stream_ch_set_ready_to_write(mcod->ch,true);
                 //media_activate
                 media_activate(mcod->mm);
@@ -292,7 +292,7 @@ void ch_mcod_set_state(ch_mcod_t * mcod, ch_mcod_state_t st)
                 int ret=0;
                 //while(ret==0)
                 //    ret=media_out_pull(mcod->mm);
-                stream_ch_pkt_write_f(mcod->ch, 'i',"mcod_state=paused");
+                dap_stream_ch_pkt_write_f(mcod->ch, 'i',"mcod_state=paused");
             }break;
             case CH_MCOD_STATE_END:{
                 mcod->ch->stream->conn->signal_close=true;
